@@ -1,3 +1,7 @@
+var RefunderGood = artifacts.require("./RefunderGood.sol");
+var RefunderBad = artifacts.require("./RefunderBad.sol");
+var Attacker = artifacts.require("./Attacker.sol");
+
 Extensions = require("../utils/extensions.js");
 Extensions.init(web3, assert);
 
@@ -15,19 +19,16 @@ contract('Refunders', function(accounts) {
         victim = accounts[1];
         return Extensions.makeSureAreUnlocked(
                 [ owner, victim ])
-            .then(function() {
-                return Extensions.makeSureHasAtLeast(
-                    owner,
-                    [ victim ],
-                    web3.toWei(1));
-            })
-            .then(function(txHashes) {
-                return web3.eth.getTransactionReceiptMined(txHashes);
-            });
+            .then(() => Extensions.makeSureHasAtLeast(
+                owner,
+                [ victim ],
+                web3.toWei(1)));
     });
 
-    refunderTypes.forEach(function(refunderType) {
+    refunderTypes.forEach(refunderType => {
+
         describe(refunderType, function() {
+        
             var refunderTypeCopy = refunderType;
             var refunderName = refunderTypeCopy;
             var RefunderType;
@@ -49,9 +50,7 @@ contract('Refunders', function(accounts) {
 
                 beforeEach("should deploy a " + refunderName, function() {
                     return RefunderType.new({ from: owner })
-                        .then(function(created) {
-                            refunder = created;
-                        });
+                        .then(created => refunder = created);
                 });
 
                 beforeEach("should give to owner and victim", function() {
@@ -59,17 +58,12 @@ contract('Refunders', function(accounts) {
                             refunder.refundIt(owner, { from: owner, value: web3.toWei(1, "finney") }),
                             refunder.refundIt(victim, { from: owner, value: web3.toWei(2, "finney") })
                         ])
-                        .then(function(txHashes) {
-                            return web3.eth.getTransactionReceiptMined(txHashes);
-                        })
-                        .then(function(receipts) {
-                            return Promise.all([
-                                    web3.eth.getBalancePromise(refunder.address),
-                                    refunder.getPaymentOf(owner),
-                                    refunder.getPaymentOf(victim)
-                                ]);
-                        })
-                        .then(function(payments) {
+                        .then(txObjects => Promise.all([
+                            web3.eth.getBalancePromise(refunder.address),
+                            refunder.getPaymentOf(owner),
+                            refunder.getPaymentOf(victim)
+                        ]))
+                        .then(payments => {
                             assert.strictEqual(
                                 payments[0].toString(10),
                                 web3.toWei(3, "finney").toString(10),
@@ -87,64 +81,40 @@ contract('Refunders', function(accounts) {
 
                 it("should refund owner before victim", function() {
                     return refunder.withdrawPayments({ from: owner })
-                        .then(function(txHash) {
-                            return web3.eth.getTransactionReceiptMined(txHash);
-                        })
-                        .then(function(receipt) {
-                            // Not making too many tests...
-                            return web3.eth.getBalancePromise(refunder.address);
-                        })
-                        .then(function(balance) {
+                        // Not making too many tests...
+                        .then(txObject => web3.eth.getBalancePromise(refunder.address))
+                        .then(balance => {
                             assert.strictEqual(
                                 balance.toString(10),
                                 web3.toWei(2, "finney").toString(10),
                                 "should have diminished balance");
                             return refunder.withdrawPayments({ from: victim });
                         })
-                        .then(function(txHash) {
-                            return web3.eth.getTransactionReceiptMined(txHash);
-                        })
-                        .then(function(receipt) {
-                            // Not making too many tests...
-                            return web3.eth.getBalancePromise(refunder.address);
-                        })
-                        .then(function(balance) {
-                            assert.strictEqual(
-                                balance.toString(10),
-                                "0",
-                                "should have empty balance");
-                        });
+                        // Not making too many tests...
+                        .then(txObject => web3.eth.getBalancePromise(refunder.address))
+                        .then(balance => assert.strictEqual(
+                            balance.toString(10),
+                            "0",
+                            "should have empty balance"));
                 });
 
                 it("should refund victim before owner", function() {
                     return refunder.withdrawPayments({ from: victim })
-                        .then(function(txHash) {
-                            return web3.eth.getTransactionReceiptMined(txHash);
-                        })
-                        .then(function(receipt) {
-                            // Not making too many tests...
-                            return web3.eth.getBalancePromise(refunder.address);
-                        })
-                        .then(function(balance) {
+                        // Not making too many tests...
+                        .then(txObject => web3.eth.getBalancePromise(refunder.address))
+                        .then(balance => {
                             assert.strictEqual(
                                 balance.toString(10),
                                 web3.toWei(1, "finney").toString(10),
                                 "should have diminished balance");
                             return refunder.withdrawPayments({ from: owner });
                         })
-                        .then(function(txHash) {
-                            return web3.eth.getTransactionReceiptMined(txHash);
-                        })
-                        .then(function(receipt) {
-                            // Not making too many tests...
-                            return web3.eth.getBalancePromise(refunder.address);
-                        })
-                        .then(function(balance) {
-                            assert.strictEqual(
-                                balance.toString(10),
-                                "0",
-                                "should have empty balance");
-                        });
+                        // Not making too many tests...
+                        .then(txObject => web3.eth.getBalancePromise(refunder.address))
+                        .then(balance => assert.strictEqual(
+                            balance.toString(10),
+                            "0",
+                            "should have empty balance"));
                 });
             });
 
@@ -153,20 +123,16 @@ contract('Refunders', function(accounts) {
 
                 beforeEach("should deploy a " + refunderName, function() {
                     return RefunderType.new({ from: owner })
-                        .then(function(created) {
-                            refunder = created;
-                        });
+                        .then(created => refunder = created);
                 });
 
                 beforeEach("should deploy an attacker", function() {
                     return Attacker.new(refunder.address, { from: owner })
-                        .then(function (created) {
+                        .then(created => {
                             attacker = created;
                             return attacker.attacked();
                         })
-                        .then(function(attacked) {
-                            assert.strictEqual(attacked, refunder.address);
-                        });
+                        .then(attacked => assert.strictEqual(attacked, refunder.address));
                 });
 
                 beforeEach("should give to attacker and victim", function() {
@@ -174,17 +140,12 @@ contract('Refunders', function(accounts) {
                             refunder.refundIt(attacker.address, { from: owner, value: web3.toWei(1, "finney") }),
                             refunder.refundIt(victim, { from: owner, value: web3.toWei(2, "finney") })
                         ])
-                        .then(function(txHashes) {
-                            return web3.eth.getTransactionReceiptMined(txHashes);
-                        })
-                        .then(function(receipts) {
-                            return Promise.all([
-                                    web3.eth.getBalancePromise(refunder.address),
-                                    refunder.getPaymentOf(attacker.address),
-                                    refunder.getPaymentOf(victim)
-                                ]);
-                        })
-                        .then(function(payments) {
+                        .then(txObjects => Promise.all([
+                            web3.eth.getBalancePromise(refunder.address),
+                            refunder.getPaymentOf(attacker.address),
+                            refunder.getPaymentOf(victim)
+                        ]))
+                        .then(payments => {
                             assert.strictEqual(
                                 payments[0].toString(10),
                                 web3.toWei(3, "finney").toString(10),
@@ -202,33 +163,21 @@ contract('Refunders', function(accounts) {
 
                 it("should refund victim before attacker", function() {
                     return refunder.withdrawPayments({ from: victim })
-                        .then(function(txHash) {
-                            return web3.eth.getTransactionReceiptMined(txHash);
-                        })
-                        .then(function(receipt) {
-                            // Not making too many tests...
-                            return web3.eth.getBalancePromise(refunder.address);
-                        })
-                        .then(function(balance) {
+                        // Not making too many tests...
+                        .then(txObject => web3.eth.getBalancePromise(refunder.address))
+                        .then(balance => {
                             assert.strictEqual(
                                 balance.toString(10),
                                 web3.toWei(1, "finney").toString(10),
                                 "should have diminished balance");
                             return attacker.attack({ from: owner, gas: 3000000 });
                         })
-                        .then(function(txHash) {
-                            return web3.eth.getTransactionReceiptMined(txHash);
-                        })
-                        .then(function(receipt) {
-                            // Not making too many tests...
-                            return web3.eth.getBalancePromise(refunder.address);
-                        })
-                        .then(function(balance) {
-                            assert.strictEqual(
-                                balance.toString(10),
-                                "0",
-                                "should have empty balance");
-                        });
+                        // Not making too many tests...
+                        .then(receipt => web3.eth.getBalancePromise(refunder.address))
+                        .then(balance => assert.strictEqual(
+                            balance.toString(10),
+                            "0",
+                            "should have empty balance"));
                 });
             });
 
@@ -238,9 +187,7 @@ contract('Refunders', function(accounts) {
 
                 before("should deploy a " + refunderName, function() {
                     return RefunderType.new({ from: owner })
-                        .then(function(created) {
-                            refunder = created;
-                        });
+                        .then(created => refunder = created);
                 });
 
                 before("should deploy an attacker", function() {
@@ -249,9 +196,7 @@ contract('Refunders', function(accounts) {
                             attacker = created;
                             return attacker.attacked();
                         })
-                        .then(function(attacked) {
-                            assert.strictEqual(attacked, refunder.address);
-                        });
+                        .then(attacked => assert.strictEqual(attacked, refunder.address));
                 });
 
                 before("should give to attacker and victim", function() {
@@ -259,17 +204,12 @@ contract('Refunders', function(accounts) {
                             refunder.refundIt(attacker.address, { from: owner, value: web3.toWei(1, "finney") }),
                             refunder.refundIt(victim, { from: owner, value: web3.toWei(victimPayment, "finney") })
                         ])
-                        .then(function(txHashes) {
-                            return web3.eth.getTransactionReceiptMined(txHashes);
-                        })
-                        .then(function(receipts) {
-                            return Promise.all([
-                                    web3.eth.getBalancePromise(refunder.address),
-                                    refunder.getPaymentOf(attacker.address),
-                                    refunder.getPaymentOf(victim)
-                                ]);
-                        })
-                        .then(function(payments) {
+                        .then(txObjects => Promise.all([
+                            web3.eth.getBalancePromise(refunder.address),
+                            refunder.getPaymentOf(attacker.address),
+                            refunder.getPaymentOf(victim)
+                        ]))
+                        .then(payments => {
                             assert.strictEqual(
                                 payments[0].toString(10),
                                 web3.toWei(victimPayment + 1, "finney").toString(10),
@@ -284,63 +224,46 @@ contract('Refunders', function(accounts) {
                                 "should have marked as received");
                         });
                 });
+                
+                if (refunderTypeCopy === "RefunderGood") {
 
-                it("should resist attack", function() {
-                    if (refunderName === "RefunderBad") {
-                        this.skip();
-                    }
-
-                    return attacker.attack({ from: owner, gas: 3000000 })
-                        .then(function(txHash) {
-                            return web3.eth.getTransactionReceiptMined(txHash);
-                        })
-                        .then(function(receipt) {
+                    it("should resist attack", function() {
+                        return attacker.attack({ from: owner, gas: 3000000 })
                             // Not making too many tests...
-                            return web3.eth.getBalancePromise(refunder.address);
-                        })
-                        .then(function(balance) {
-                            assert.strictEqual(
-                                balance.toString(10),
-                                web3.toWei(victimPayment, "finney").toString(10),
-                                "should have correct balance for victim");
-                            return refunder.withdrawPayments({ from: victim });
-                        })
-                        .then(function(txHash) {
-                            return web3.eth.getTransactionReceiptMined(txHash);
-                        })
-                        .then(function(receipt) {
+                            .then(txObject => web3.eth.getBalancePromise(refunder.address))
+                            .then(balance => {
+                                assert.strictEqual(
+                                    balance.toString(10),
+                                    web3.toWei(victimPayment, "finney").toString(10),
+                                    "should have correct balance for victim");
+                                return refunder.withdrawPayments({ from: victim });
+                            })
                             // Not making too many tests...
-                            return web3.eth.getBalancePromise(refunder.address);
-                        })
-                        .then(function(balance) {
-                            assert.strictEqual(
+                            .then(txObject => web3.eth.getBalancePromise(refunder.address))
+                            .then(balance => assert.strictEqual(
                                 balance.toString(10),
                                 "0",
-                                "should have empty balance");
-                        });
-                });
+                                "should have empty balance"));
+                    });
 
-                it("should fail under attack", function() {
-                    if (refunderName === "RefunderGood") {
-                        this.skip();
-                    }
+                }
 
-                    return attacker.attack({ from: owner, gas: 3000000 })
-                        .then(function(txHash) {
-                            return web3.eth.getTransactionReceiptMined(txHash);
-                        })
-                        .then(function(receipt) {
-                            // Not making too many tests...
-                            assert.isBelow(receipt.gasUsed, 3000000, "should not have used all gas");
-                            return web3.eth.getBalancePromise(refunder.address);
-                        })
-                        .then(function(balance) {
-                            assert.strictEqual(
+                if (refunderTypeCopy === "RefunderBad") {
+
+                    it("should fail under attack", function() {
+                        return attacker.attack({ from: owner, gas: 3000000 })
+                            .then(txObject => {
+                                // Not making too many tests...
+                                assert.isBelow(txObject.receipt.gasUsed, 3000000, "should not have used all gas");
+                                return web3.eth.getBalancePromise(refunder.address);
+                            })
+                            .then(balance => assert.strictEqual(
                                 balance.toString(10),
                                 web3.toWei(1, "finney").toString(10),
-                                "should have drained more than supposed");
-                        });
-                });
+                                "should have drained more than supposed"));
+                    });
+
+                }
             });
         });
     });

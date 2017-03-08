@@ -1,6 +1,6 @@
 pragma solidity ^0.4.4;
 
-import "PullPayment.sol";
+import "./PullPayment.sol";
 
 /*
  * Modified from https://github.com/OpenZeppelin/zeppelin-solidity/blob/master/contracts/PullPayment.sol

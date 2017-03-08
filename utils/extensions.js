@@ -216,22 +216,19 @@ module.exports = {
     makeSureHasAtLeast: function (richAccount, recipients, wei) {
         var requests = [];
         recipients.forEach(function (recipient) {
-            requests.push(web3.eth.getBalancePromise(recipient));
-        });
-        return Promise.all(requests)
-            .then(function (balances) {
-                var requests2 = [];
-                balances.forEach(function (balance, index) {
+            requests.push(web3.eth.getBalancePromise(recipient)
+                .then(function (balance) {
                     if (balance.lessThan(wei)) {
-                        requests2.push(web3.eth.sendTransactionPromise({
+                        return web3.eth.sendTransactionPromise({
                             from: richAccount,
-                            to: recipients[index],
+                            to: recipient,
                             value: wei
-                        }));
+                        });
                     }
-                });
-                return requests2;
-            });
+                })
+            );
+        });
+        return Promise.all(requests);
     },
 
     makeSureAreUnlocked: function (accounts) {
