@@ -1,6 +1,11 @@
+const Promise = require("bluebird");
 const RefunderGood = artifacts.require("./RefunderGood.sol");
 const RefunderBad = artifacts.require("./RefunderBad.sol");
 const Attacker = artifacts.require("./Attacker.sol");
+
+if (typeof web3.eth.getAccountsPromise !== "function") {
+    Promise.promisifyAll(web3.eth, { suffix: "Promise" });
+}
 
 Extensions = require("../utils/extensions.js");
 Extensions.init(web3, assert);
