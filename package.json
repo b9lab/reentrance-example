@@ -1,0 +1,25 @@
+{
+  "name": "reentrance-example",
+  "version": "1.0.0",
+  "description": "An example of a reentrance bug",
+  "main": "truffle.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "./node_modules/.bin/truffle test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/b9lab/reentrance-example.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/b9lab/reentrance-example/issues"
+  },
+  "homepage": "https://github.com/b9lab/reentrance-example#readme",
+  "devDependencies": {
+    "truffle": "^3.2.5"
+  }
+}
