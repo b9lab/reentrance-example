@@ -84,6 +84,24 @@ module.exports = {
 
     },
 
+    sequentialPromise: function(promiseArray) {
+        const result = promiseArray.reduce(
+            (reduced, promise, index) => {
+                reduced.results.push(undefined);
+                return {
+                    chain: reduced.chain
+                        .then(() => promise)
+                        .then(result => reduced.results[ index ] = result),
+                    results: reduced.results
+                };
+            },
+            {
+                chain: Promise.resolve(),
+                results: []
+            });
+        return result.chain.then(() => result.results);
+    },
+
     expectedExceptionPromise: function(action, gasToUse, timeOut) {
         timeOut = timeOut ? timeOut : 5000;
         const promise = new Promise(function(resolve, reject) {

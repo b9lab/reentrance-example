@@ -47,6 +47,7 @@ contract('Refunders', function(accounts) {
                     case "RefunderBad":
                         RefunderType = RefunderBad;
                         break;
+                    default: throw new Error("Unknown type ", refunderTypeCopy);
                 }
             });
 
@@ -59,11 +60,11 @@ contract('Refunders', function(accounts) {
                 });
 
                 beforeEach("should give to owner and victim", function() {
-                    return Promise.all([
+                    return Extensions.sequentialPromise([
                         refunder.refundIt(owner, { from: owner, value: web3.toWei(1, "finney") }),
                         refunder.refundIt(victim, { from: owner, value: web3.toWei(2, "finney") })
                     ])
-                        .then(txObjects => Promise.all([
+                        .then(txObjects => Extensions.sequentialPromise([
                             web3.eth.getBalancePromise(refunder.address),
                             refunder.getPaymentOf(owner),
                             refunder.getPaymentOf(victim)
@@ -141,11 +142,11 @@ contract('Refunders', function(accounts) {
                 });
 
                 beforeEach("should give to attacker and victim", function() {
-                    return Promise.all([
+                    return Extensions.sequentialPromise([
                         refunder.refundIt(attacker.address, { from: owner, value: web3.toWei(1, "finney") }),
                         refunder.refundIt(victim, { from: owner, value: web3.toWei(2, "finney") })
                     ])
-                        .then(txObjects => Promise.all([
+                        .then(txObjects => Extensions.sequentialPromise([
                             web3.eth.getBalancePromise(refunder.address),
                             refunder.getPaymentOf(attacker.address),
                             refunder.getPaymentOf(victim)
@@ -205,11 +206,11 @@ contract('Refunders', function(accounts) {
                 });
 
                 before("should give to attacker and victim", function() {
-                    return Promise.all([
+                    return Extensions.sequentialPromise([
                         refunder.refundIt(attacker.address, { from: owner, value: web3.toWei(1, "finney") }),
                         refunder.refundIt(victim, { from: owner, value: web3.toWei(victimPayment, "finney") })
                     ])
-                        .then(txObjects => Promise.all([
+                        .then(txObjects => Extensions.sequentialPromise([
                             web3.eth.getBalancePromise(refunder.address),
                             refunder.getPaymentOf(attacker.address),
                             refunder.getPaymentOf(victim)
